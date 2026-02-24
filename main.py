@@ -1,10 +1,10 @@
 import requests
+import datetime
 from feedgen.feed import FeedGenerator
 
 def generate_kabir_feed():
     url = "https://kabir-ke-dohe-api.vercel.app/api/couplets?popular=true"
     
-    # 1. Initialize the feed first so it ALWAYS exists
     fg = FeedGenerator()
     fg.title('Daily Kabir Das Dohas')
     fg.link(href='https://github.com/fladka/Kabir', rel='alternate')
@@ -15,7 +15,6 @@ def generate_kabir_feed():
         response = requests.get(url)
         data = response.json()
         
-        # 2. Aggressively hunt for the list of dohas
         couplets = []
         if isinstance(data, dict):
             for val in data.values():
@@ -29,16 +28,17 @@ def generate_kabir_feed():
         print(f"Failed to fetch from API: {e}")
         couplets = []
         
-    # 3. If no dohas are found, create a fallback entry so the file is still generated
+    # Get the current time to satisfy T-UI's strict parser
+    current_time = datetime.datetime.now(datetime.timezone.utc)
+        
     if not couplets:
-        print("Warning: Creating a placeholder because no dohas were found.")
         fe = fg.add_entry()
         fe.title('Kabir Feed Setup Successful')
         fe.description('Your feed is active! Waiting for the API to provide the next doha.')
         fe.link(href='https://github.com/fladka/Kabir')
+        fe.pubDate(current_time)
     else:
-        # 4. Add the actual dohas
-        for doha in couplets[:5]:
+        for i, doha in enumerate(couplets[:5]):
             fe = fg.add_entry()
             fe.title(doha.get('couplet_hindi', 'Kabir Doha'))
             
@@ -50,9 +50,13 @@ def generate_kabir_feed():
             fe.id(str(doha.get('_id', doha.get('couplet_hindi'))))
             fe.link(href="https://github.com/fladka/Kabir")
             
-    # 5. Save the file (This will now ALWAYS happen)
+            # Add the required timestamp, offset slightly for each doha
+            item_time = current_time - datetime.timedelta(minutes=i)
+            fe.pubDate(item_time)
+            
     fg.rss_file('rss.xml')
     print("RSS feed generated successfully!")
 
 if __name__ == '__main__':
     generate_kabir_feed()
+        
