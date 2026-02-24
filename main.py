@@ -26,7 +26,7 @@ def generate_kabir_feed():
     index = hours_since_epoch % len(couplets)
     doha = couplets[index]
     
-    # 1. NEW: T-UI PLAIN TEXT EXPORT
+    # 1. TEXT EXPORT
     text_output = f"""
 ====================================
            KABIR DOHA            
@@ -43,7 +43,7 @@ TRANSLATION:
     with open('doha.txt', 'w', encoding='utf-8') as f:
         f.write(text_output)
 
-    # 2. EXISTING: RSS EXPORT
+    # 2. RSS EXPORT
     fg = FeedGenerator()
     fg.title('Hourly Kabir Das Dohas')
     fg.link(href='https://github.com/fladka/Kabir', rel='alternate')
@@ -67,4 +67,3 @@ TRANSLATION:
 
 if __name__ == '__main__':
     generate_kabir_feed()
-        
