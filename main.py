@@ -11,13 +11,29 @@ def generate_kabir_feed():
         
     data = response.json()
     
+    # NEW FIX: Safely unwrap the dictionary to find the list of dohas
+    couplets = []
+    if isinstance(data, dict):
+        # Look for common list keys the API might use
+        for key in ['couplets', 'data', 'results']:
+            if key in data and isinstance(data[key], list):
+                couplets = data[key]
+                break
+    elif isinstance(data, list):
+        couplets = data
+        
+    if not couplets:
+        print("Could not find the couplets in the API response.")
+        return
+    
     fg = FeedGenerator()
     fg.title('Daily Kabir Das Dohas')
     fg.link(href='https://github.com/fladka/Kabir', rel='alternate')
     fg.description('Timeless wisdom and couplets by Sant Kabir Das')
     fg.language('hi')
     
-    for doha in data[:5]:
+    # We now slice 'couplets' instead of 'data'
+    for doha in couplets[:5]:
         fe = fg.add_entry()
         fe.title(doha.get('couplet_hindi', 'Kabir Doha'))
         
@@ -34,4 +50,3 @@ def generate_kabir_feed():
 
 if __name__ == '__main__':
     generate_kabir_feed()
-    
