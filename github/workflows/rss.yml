@@ -1,8 +1,8 @@
 name: Generate Kabir RSS Feed
 
 on:
-  schedule:
-    - cron: '0 2 * * *' # Runs daily at 2:00 AM UTC
+    schedule:
+    - cron: '0 * * * *'
   workflow_dispatch: # Allows you to run it manually by clicking a button
 
 jobs:
