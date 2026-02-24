@@ -2,13 +2,7 @@ import datetime
 from feedgen.feed import FeedGenerator
 
 def generate_kabir_feed():
-    fg = FeedGenerator()
-    fg.title('Hourly Kabir Das Dohas')
-    fg.link(href='https://github.com/fladka/Kabir', rel='alternate')
-    fg.description('Timeless wisdom by Sant Kabir Das, updating every hour')
-    fg.language('hi')
-
-    # THE DOHA LIBRARY (You can add up to 100+ here using this exact format)
+    # THE DOHA LIBRARY
     couplets = [
         {"couplet_hindi": "काल करे सो आज कर, आज करे सो अब । पल में प्रलय होएगी, बहुरि करेगा कब ॥", "explanation": "Do tomorrow's work today, and today's work right now.", "translation": "Tomorrow's work do today, today's work now. If the moment is lost, how will the work be done?"},
         {"couplet_hindi": "बुरा जो देखन मैं चला, बुरा न मिलिया कोय । जो दिल खोजा आपना, मुझसे बुरा न कोय ॥", "explanation": "I searched the world for bad people but found none. When I looked inside my own heart, I realized I am the worst of all.", "translation": "I went searching for the wicked, but found no one. When I searched my own heart, I found no one worse than me."},
@@ -28,34 +22,49 @@ def generate_kabir_feed():
     ]
 
     current_time = datetime.datetime.now(datetime.timezone.utc)
-    
-    # MAGIC: This calculates the current hour and picks a doha based on it
     hours_since_epoch = int(current_time.timestamp() // 3600)
+    index = hours_since_epoch % len(couplets)
+    doha = couplets[index]
     
-    # We will display the last 3 hours of dohas, with the newest one at the top
+    # 1. NEW: T-UI PLAIN TEXT EXPORT
+    text_output = f"""
+====================================
+           KABIR DOHA            
+====================================
+{doha['couplet_hindi']}
+
+MEANING:
+{doha['explanation']}
+
+TRANSLATION:
+{doha['translation']}
+====================================
+"""
+    with open('doha.txt', 'w', encoding='utf-8') as f:
+        f.write(text_output)
+
+    # 2. EXISTING: RSS EXPORT
+    fg = FeedGenerator()
+    fg.title('Hourly Kabir Das Dohas')
+    fg.link(href='https://github.com/fladka/Kabir', rel='alternate')
+    fg.description('Timeless wisdom by Sant Kabir Das')
+    fg.language('hi')
+
     for i in range(3):
-        index = (hours_since_epoch - i) % len(couplets)
-        doha = couplets[index]
-        
+        idx = (hours_since_epoch - i) % len(couplets)
+        d = couplets[idx]
         fe = fg.add_entry()
-        title = doha.get('couplet_hindi', 'Kabir Doha')
+        title = d.get('couplet_hindi', 'Kabir Doha')
         fe.title(title)
-        
-        meaning = doha.get('explanation', '')
-        translation = doha.get('translation', '')
-        content = f"<p><strong>Meaning:</strong> {meaning}</p><p><strong>Translation:</strong> {translation}</p>"
-        fe.description(content)
-        
-        # Unique ID for T-UI to track
+        fe.description(f"<p>Meaning: {d.get('explanation', '')}</p><p>Translation: {d.get('translation', '')}</p>")
         fe.id(title + str(hours_since_epoch - i))
         fe.link(href="https://github.com/fladka/Kabir")
-        
-        # Perfect hourly timestamp
         item_time = current_time.replace(minute=0, second=0, microsecond=0) - datetime.timedelta(hours=i)
         fe.pubDate(item_time)
 
     fg.rss_file('rss.xml')
-    print("Hourly RSS feed generated successfully!")
+    print("Hourly Text and RSS feeds generated successfully!")
 
 if __name__ == '__main__':
     generate_kabir_feed()
+    
